@@ -30,7 +30,7 @@ function main()
     #opts_AddMandatory '--in_data' 'INPUT_DATA_FOLDER' 'path to raw data' "a required value; is the path to the study folder holding the raw data" "--inData"
     #opts_AddMandatory '--out_data' 'OUTPUT_DATA_FOLDER' 'path to preprocessed data' "a required value; is the path to the study folder holding the preprocessed data" "--outData"
     opts_AddMandatory '--log' 'LOG_FOLDER' 'path to the log directory' "path to the directory containing the log files produced by the preprocessing pipeline"  "--logDir"
-    opts_AddOptional  '--out_subjects' 'OUT_SUBJECTS' 'path to output file with list of subject IDs' "an optional value; path to output file with list of subject IDs that needs preprocessing" "default" "outSubjects"
+    opts_AddOptional  '--out_subjects' 'OUT_SUBJECTS' 'path to output file with list of subject IDs' "an optional value; path to output file with list of subject IDs that needs preprocessing" "default" "--outSubjects"
     opts_ParseArguments "$@"
 
     #display the parsed/default values

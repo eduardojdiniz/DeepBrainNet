@@ -6,6 +6,7 @@ dependencies:
     - scikit-learn
     - pandas
     - pillow
+    - absl-py
     - pip
     - pip:
         - nibabel

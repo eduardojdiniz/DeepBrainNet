@@ -17,7 +17,7 @@ FLAGS = flags.FLAGS
 # e.g., /home/eduardo/proj/DBN/data/raw/ADNI
 flags.DEFINE_string('data_path', None, 'Path to the data folder')
 # e.g., /home/eduardo/proj/DBN/logs/ADNI/RPP
-flags.DEFINE_string('log_path',  None, 'Path to the log folder')
+flags.DEFINE_string('log_path', None, 'Path to the log folder')
 
 
 def get_subdir_list(some_dir):
@@ -72,9 +72,22 @@ def main(data_path, log_path):
     # Save ID list of RPP preprocessed subjects
     save_list(logged_ID_list, os.path.join(log_path, "logged_ID_list.txt"))
     # Get list of subject IDs that were not processed
-    not_preprocessed_ID_list = compare_lists(ID_list, logged_ID_list)[0]
+    (not_preproc_ID_list,_ ,_ ) = compare_lists(ID_list, logged_ID_list)
+
+    complete = os.path.join(log_path, "complete.txt")
+    if os.path.exists(complete):
+        os.remove(complete)
     # Save ID list of RPP preprocessed subjects
-    save_list(not_preprocessed_ID_list, os.path.join(data_path, "not_processed_ID_list.txt"))
+    not_preproc_path = os.path.join(data_path, "not_preprocessed_ID_list.txt")
+    if os.path.exists(not_preproc_path):
+        os.remove(not_preproc_path)
+
+    # if list of not preprocessed IDs is empty
+    if not not_preproc_ID_list:
+        # Create an empty file named complete.txt
+        save_list(not_preproc_ID_list, complete)
+    else:
+        save_list(not_preproc_ID_list, not_preproc_path)
 
 
 if __name__ == '__main__':

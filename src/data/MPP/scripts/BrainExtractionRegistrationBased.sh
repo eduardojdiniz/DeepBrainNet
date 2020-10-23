@@ -68,7 +68,7 @@ defaultopt() {
 
 # All except variables starting with $Output are saved in the Working Directory:
 #     roughlin.mat "$BaseName"_to_MNI_roughlin.nii.gz   (flirt outputs)
-#     NonlinearRegJacobians.nii.gz IntensityModulatedT1.nii.gz NonlinearReg.txt NonlinearIntensities.nii.gz
+#     NonlinearRegJacobians.nii.gz IntensityModulatedXImage.nii.gz NonlinearReg.txt NonlinearIntensities.nii.gz
 #     NonlinearReg.nii.gz (the coefficient version of the warpfield)
 #     str2standard.nii.gz standard2str.nii.gz   (both warpfields in field format)
 #     "$BaseName"_to_MNI_nonlin.nii.gz   (spline interpolated output)
@@ -92,14 +92,6 @@ OutputImage=`getopt1 "--outImage" $@`
 OutputBrainExtractedImage=`getopt1 "--outBrain" $@` # "$7"
 OutputBrainMask=`getopt1 "--outBrainMask" $@` # "$8"
 FNIRTConfig=`getopt1 "--FNIRTConfig" $@` # "$9"
-
-# default parameters
-#WD=`defaultopt $WD .`
-#Reference=`defaultopt $Reference ${MNI_Templates}/MNI152_T1_0.7mm.nii.gz`
-#ReferenceMask=`defaultopt $ReferenceMask ${MNI_Templates}/MNI152_T1_0.7mm_brain_mask.nii.gz`  # dilate to be conservative with final brain mask
-#Reference2mm=`defaultopt $Reference2mm ${MNI_Templates}/MNI152_T1_2mm.nii.gz`
-#Reference2mmMask=`defaultopt $Reference2mmMask ${MNI_Templates}/MNI152_T1_2mm_brain_mask_dil.nii.gz`  # dilate to be conservative with final brain mask
-#FNIRTConfig=`defaultopt $FNIRTConfig ${MPP_Config}/T1_2_MNI152_2mm.cnf`
 
 BaseName=`${FSLDIR}/bin/remove_ext $Input`;
 BaseName=`basename $BaseName`;
@@ -125,7 +117,7 @@ ${FSLDIR}/bin/convert_xfm -omat "$WD"/full2roi.mat -inverse "$WD"/roi2full.mat
 # Register to 2mm reference image (linear then non-linear)
 ${FSLDIR}/bin/flirt -interp spline -dof 12 -in "$WD"/robustroi.nii.gz -ref "$Reference2mm" -omat "$WD"/roughlin.mat -out "$WD"/"$BaseName"_to_MNI_roughlin.nii.gz -nosearch
 
-${FSLDIR}/bin/fnirt --in="$WD"/robustroi.nii.gz --ref="$Reference2mm" --aff="$WD"/roughlin.mat --refmask="$Reference2mmMask" --fout="$WD"/str2standard.nii.gz --jout="$WD"/NonlinearRegJacobians.nii.gz --refout="$WD"/IntensityModulatedT1.nii.gz --iout="$WD"/"$BaseName"_to_MNI_nonlin.nii.gz --logout="$WD"/NonlinearReg.txt --intout="$WD"/NonlinearIntensities.nii.gz --cout="$WD"/NonlinearReg.nii.gz --config="$FNIRTConfig"
+${FSLDIR}/bin/fnirt --in="$WD"/robustroi.nii.gz --ref="$Reference2mm" --aff="$WD"/roughlin.mat --refmask="$Reference2mmMask" --fout="$WD"/str2standard.nii.gz --jout="$WD"/NonlinearRegJacobians.nii.gz --refout="$WD"/IntensityModulatedXImage.nii.gz --iout="$WD"/"$BaseName"_to_MNI_nonlin.nii.gz --logout="$WD"/NonlinearReg.txt --intout="$WD"/NonlinearIntensities.nii.gz --cout="$WD"/NonlinearReg.nii.gz --config="$FNIRTConfig"
 
 # Overwrite the image output from FNIRT with a spline interpolated highres version
 ${FSLDIR}/bin/applywarp --rel --interp=spline --in="$WD"/robustroi.nii.gz --ref="$Reference" -w "$WD"/str2standard.nii.gz --out="$WD"/"$BaseName"_to_MNI_nonlin.nii.gz

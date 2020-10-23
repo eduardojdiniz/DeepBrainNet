@@ -82,7 +82,7 @@ function main()
     rm "$WD"/$BaseName.nii
     rm "$WD"/m$BaseName.nii.gz
 
-    log_Msg "END: One-set resampled version of T1w_acpc output"
+    log_Msg "END: Bias Correction"
 
     # ------------------------------------------------------------------------------
     # QA STUFF

@@ -15,10 +15,11 @@
 #source $HOME/.bashrc
 
 module purge # Make sure the modules environment is sane
-module load gcc/6.3.0
+module load gcc/5.2.0
 module load fsl/5.0.11-centos
-module load python/3.7.0
 module load matlab/R2019b
+
+#module load python/3.7.0
 
 #. /ihome/crc/install/python/miniconda3-3.7/etc/profile.d/conda.sh
 

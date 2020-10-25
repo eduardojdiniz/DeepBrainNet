@@ -182,7 +182,7 @@ main() {
     i=1
     while [ $i -le $numXs ] ; do
         # An @ symbol separate the X domain image's full paths
-        xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}${i}/${SubjectID}_${b0}_${domainX}${i}.nii.gz@"`
+        xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}${i}/${SubjectID}_${class}_${domainX}${i}.nii.gz@"`
         i=$(($i+1))
     done
 
@@ -193,7 +193,7 @@ main() {
     i=1
     while [ $i -le $numYs ] ; do
         # An @ symbol separate the Y domain image's full paths
-        yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}${i}/${SubjectID}_${b0}_${domainY}${i}.nii.gz@"`
+        yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}${i}/${SubjectID}_${class}_${domainY}${i}.nii.gz@"`
         i=$(($i+1))
     done
 

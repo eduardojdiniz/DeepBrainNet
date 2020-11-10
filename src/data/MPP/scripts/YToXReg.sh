@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 # Requirements for this script
 #  installed versions of: FSL
@@ -13,7 +13,7 @@ script_name=$(basename "${0}")
 Usage() {
 	cat <<EOF
 
-${script_name}: Script for registering T2w to T1w
+${script_name}: Script for registering Y domain images to X domain images
 
 Usage: ${script_name}
 
@@ -47,50 +47,65 @@ log_Check_Env_Var FSLDIR
 ########################################## DO WORK ##########################################
 
 
-log_Msg "START: T2w2T1Reg"
+log_Msg "START: YToXReg"
 
 WD="$1"
-T1wImage="$2"
-T1wImageBrain="$3"
-T2wImage="$4"
-T2wBrain="$5"
-T2wBrainMask="$6"
-OutputT1wImage="$7"
-OutputT1wImageBrain="$8"
-OutputT1wTransform="$9"
-OutputT2wImage="${10}"
-OutputT2wBrain="${11}"
-OutputT2wBrainMask="${12}"
-OutputT2wTransform="${13}"
+xImage="$2"
+xImageBrain="$3"
+xImageBrainMask="$4"
+yImage="$5"
+yImageBrain="$6"
+yImageBrainMask="$7"
+outputXImage="$8"
+outputXImageBrain="$9"
+outputXTransform="${10}"
+outputYImage="${11}"
+outputYImageBrain="${12}"
+outputYImageBrainMask="${13}"
+outputYTransform="${14}"
+outputInvYTransform="${15}"
 
-T1wImageBrainFile=`basename "$T1wImageBrain"`
+#xImageBrainFile=`basename "$xImageBrain"`
+#
+#${FSLDIR}/bin/imcp "$xImageBrain" "$WD"/"$xImageBrainFile"
+#
+#${FSLDIR}/bin/epi_reg --epi="$yImageBrain" --t1="$xImage" --t1brain="$WD"/"$xImageBrainFile" --out="$WD"/YToX
+#${FSLDIR}/bin/applywarp --rel --interp=spline --in="$yImage" --ref="$xImage" --premat="$WD"/YToX.mat --out="$WD"/YToX
+#${FSLDIR}/bin/fslmaths "$WD"/YToX -add 1 "$WD"/YToX -odt float
+#
+#${FSLDIR}/bin/applywarp --rel --interp=spline --in="$yImageBrain" --ref="$xImage" --premat="$WD"/YToX.mat --out="$WD"/YToXBrain
+##${FSLDIR}/bin/fslmaths "$WD"/YToXBrain -add 1 "$WD"/YToXBrain -odt float
+#
+#${FSLDIR}/bin/applywarp --rel --interp=nn -i "$yImageBrainMask" -r "$xImage" --premat="$WD"/YToX.mat -o "$outputYImageBrainMask"
+#
+#${FSLDIR}/bin/imcp "$xImage" "$outputXImage"
+#${FSLDIR}/bin/imcp "$xImageBrain" "$outputXImageBrain"
+#
+#${FSLDIR}/bin/fslmerge -t $outputXTransform "$xImage".nii.gz "$xImage".nii.gz "$xImage".nii.gz
+#${FSLDIR}/bin/fslmaths $outputXTransform -mul 0 $outputXTransform
+#
+#${FSLDIR}/bin/imcp "$WD"/YToX "$outputYImage"
+#${FSLDIR}/bin/fslmaths "$outputYImage" -abs "$outputYImage" -odt float
+#${FSLDIR}/bin/imcp "$WD"/YToXBrain "$outputYImageBrain"
+#${FSLDIR}/bin/fslmaths "$outputYImageBrain" -abs "$outputYImageBrain" -odt float
+#
+## outputYImage is actually in X space (is the co-registered X domain image); This warp does nothing to the input, it's an identity warp. So the final transformation is equivalent to postmat.
+#${FSLDIR}/bin/convertwarp --relout --rel -r "$outputYImage".nii.gz -w $outputXTransform --postmat="$WD"/YToX.mat --out="$outputYTransform"
 
-${FSLDIR}/bin/imcp "$T1wImageBrain" "$WD"/"$T1wImageBrainFile"
+# Linear then non-linear registration to MNI
+${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${yImage} -ref ${xImage} -omat ${outputYTransform} -out ${outputYImage}
+${FSLDIR}/bin/fslmaths "$outputYImage" -abs "$outputYImage" -odt float
 
-${FSLDIR}/bin/epi_reg --epi="$T2wBrain" --t1="$T1wImage" --t1brain="$WD"/"$T1wImageBrainFile" --out="$WD"/T2w2T1w
-${FSLDIR}/bin/applywarp --rel --interp=spline --in="$T2wImage" --ref="$T1wImage" --premat="$WD"/T2w2T1w.mat --out="$WD"/T2w2T1w
-${FSLDIR}/bin/fslmaths "$WD"/T2w2T1w -add 1 "$WD"/T2w2T1w -odt float
+# Invert affine transform
+${FSLDIR}/bin/convert_xfm -omat ${outputInvYTransform} -inverse ${outputYTransform}
 
-${FSLDIR}/bin/applywarp --rel --interp=spline --in="$T2wBrain" --ref="$T1wImage" --premat="$WD"/T2w2T1w.mat --out="$WD"/T2w2T1wBrain
-#${FSLDIR}/bin/fslmaths "$WD"/T2w2T1wBrain -add 1 "$WD"/T2w2T1wBrain -odt float
+${FSLDIR}/bin/imcp "$xImage" "$outputXImage"
+${FSLDIR}/bin/imcp "$xImageBrain" "$outputXImageBrain"
 
-${FSLDIR}/bin/applywarp --rel --interp=nn -i "$T2wBrainMask" -r "$T1wImage" --premat="$WD"/T2w2T1w.mat -o "$OutputT2wBrainMask"
+${FSLDIR}/bin/fslmerge -t $outputXTransform "$xImage".nii.gz "$xImage".nii.gz "$xImage".nii.gz
+${FSLDIR}/bin/fslmaths $outputXTransform -mul 0 $outputXTransform
 
-${FSLDIR}/bin/imcp "$T1wImage" "$OutputT1wImage"
+${FSLDIR}/bin/fslmaths ${outputYImage} -mas ${xImageBrain} ${outputYImageBrain}
+${FSLDIR}/bin/imcp ${xImageBrainMask} ${outputYImageBrainMask}
 
-#${FSLDIR}/bin/imcp "$T1wImageBrain" "$OutputT1wImageBrain"
-${FSLDIR}/bin/fslmaths "$OutputT1wImage" -mas "$OutputT2wBrainMask" "$OutputT1wImageBrain"
-${FSLDIR}/bin/fslmaths "$OutputT1wImageBrain" -abs "$OutputT1wImageBrain" -odt float
-
-${FSLDIR}/bin/fslmerge -t $OutputT1wTransform "$T1wImage".nii.gz "$T1wImage".nii.gz "$T1wImage".nii.gz
-${FSLDIR}/bin/fslmaths $OutputT1wTransform -mul 0 $OutputT1wTransform
-
-${FSLDIR}/bin/imcp "$WD"/T2w2T1w "$OutputT2wImage"
-${FSLDIR}/bin/fslmaths "$OutputT2Image" -abs "$OutputT2wImage" -odt float
-${FSLDIR}/bin/imcp "$WD"/T2w2T1wBrain "$OutputT2wBrain"
-${FSLDIR}/bin/fslmaths "$OutputT2Brain" -abs "$OutputT2wBrain" -odt float
-
-# OutputT2wImage is actually in T1w space (is the co-registered T1); This warp does nothing to the input, it's an identity warp. So the final transformation is equivalent to postmat.
-${FSLDIR}/bin/convertwarp --relout --rel -r "$OutputT2wImage".nii.gz -w $OutputT1wTransform --postmat="$WD"/T2w2T1w.mat --out="$OutputT2wTransform"
-
-log_Msg "END: T2w2T1Reg"
+log_Msg "END: YToXReg"

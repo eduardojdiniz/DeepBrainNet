@@ -99,22 +99,47 @@ echo " " >> $WD/xfms/log.txt
 # DO WORK
 # ------------------------------------------------------------------------------
 
+## Linear then non-linear registration to MNI
+#${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${xBrain} -ref ${ReferenceBrain} -omat ${OutputTransform} -out ${OutputXImageBrain}
+#${FSLDIR}/bin/fslmaths "$OutputXImageBrain" -abs "$OutputXImageBrain" -odt float
+#
+## Invert affine transform
+#${FSLDIR}/bin/convert_xfm -omat ${OutputInvTransform} -inverse ${OutputTransform}
+#
+## X domain set of transformed outputs (brain/whole-head + orig)
+#${FSLDIR}/bin/flirt -in ${x} -ref ${Reference} -out ${OutputXImage} -init ${OutputTransform} -applyxfm
+#${FSLDIR}/bin/fslmaths "$OutputXImage" -abs "$OutputXImage" -odt float
+#
+#${FSLDIR}/bin/flirt -in ${xBrainMask} -ref ${Reference} -out ${OutputXImageBrainMask} -init ${OutputTransform} -applyxfm
+#${FSLDIR}/bin/fslmaths "$OutputXImageBrainMask" -abs "$OutputXImageBrainMask" -odt float
+#
+## Y domain set of warped outputs(brain/whole-head + orig)
+#if [ -n "${y}" ] ; then
+#    ${FSLDIR}/bin/flirt -in ${y} -ref ${Reference} -out ${OutputYImage} -init ${OutputTransform} -applyxfm
+#    ${FSLDIR}/bin/fslmaths "$OutputYImage" -abs "$OutputYImage" -odt float
+#
+#    ${FSLDIR}/bin/flirt -in ${yBrain} -ref ${Reference} -out ${OutputYImageBrain} -init ${OutputTransform} -applyxfm
+#    ${FSLDIR}/bin/fslmaths "$OutputYImageBrain" -abs "$OutputYImageBrain" -odt float
+#    ${FSLDIR}/bin/flirt -in ${yBrainMask} -ref ${Reference} -out ${OutputYImageBrainMask} -init ${OutputTransform} -applyxfm
+#    ${FSLDIR}/bin/fslmaths "$OutputYImageBrainMask" -abs "$OutputYImageBrainMask" -odt float
+#fi
+
 # Linear then non-linear registration to MNI
-${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${xBrain} -ref ${ReferenceBrain} -omat ${OutputTransform} -out ${OutputXImageBrain}
-${FSLDIR}/bin/fslmaths "$OutputXImageBrain" -abs "$OutputXImageBrain" -odt float
+${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${x} -ref ${Reference} -omat ${OutputTransform} -out ${OutputXImage}
+${FSLDIR}/bin/fslmaths "$OutputXImage" -abs "$OutputXImage" -odt float
 
 # Invert affine transform
 ${FSLDIR}/bin/convert_xfm -omat ${OutputInvTransform} -inverse ${OutputTransform}
 
 # X domain set of transformed outputs (brain/whole-head + orig)
-${FSLDIR}/bin/flirt -in ${x} -ref ${Reference} -out ${OutputXImage} -init ${OutputTransform} -applyxfm
-${FSLDIR}/bin/fslmaths "$OutputXImage" -abs "$OutputXImage" -odt float
+${FSLDIR}/bin/flirt -in ${xBrain} -ref ${Reference} -out ${OutputXImageBrain} -init ${OutputTransform} -applyxfm
+${FSLDIR}/bin/fslmaths "$OutputXImageBrain" -abs "$OutputXImageBrain" -odt float
 
 ${FSLDIR}/bin/flirt -in ${xBrainMask} -ref ${Reference} -out ${OutputXImageBrainMask} -init ${OutputTransform} -applyxfm
 ${FSLDIR}/bin/fslmaths "$OutputXImageBrainMask" -abs "$OutputXImageBrainMask" -odt float
 
 # Y domain set of warped outputs(brain/whole-head + orig)
-if [ -n "${Y}" ] ; then
+if [ -n "${y}" ] ; then
     ${FSLDIR}/bin/flirt -in ${y} -ref ${Reference} -out ${OutputYImage} -init ${OutputTransform} -applyxfm
     ${FSLDIR}/bin/fslmaths "$OutputYImage" -abs "$OutputYImage" -odt float
 

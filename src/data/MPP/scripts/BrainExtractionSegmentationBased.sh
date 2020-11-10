@@ -49,7 +49,7 @@ function usage()
 {
     #header text
     echo "
-$log_ToolName: Perform Bias Correction
+$log_ToolName: Perform Segmentation-based Brain Extraction
 
 Usage: $log_ToolName --workingDir=<path to the working directory>
                      --image=<path to nii file>

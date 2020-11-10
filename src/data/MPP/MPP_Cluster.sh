@@ -22,7 +22,6 @@ Usage: $log_ToolName
                     [--class=<3T|7T|T1w_MPR|T2w_SPC>]   Name of the class
                     [--domainX=<3T|7T|T1w_MPR|T2w_SPC>] Name of the domain X
                     [--domainY=<3T|7T|T1w_MPR|T2w_SPC>] Name of the domain Y
-                    [--b0=<3T|7T>]                      Magniture of the B0 field
                     [--brainSize=<int>]                 Brain size estimate in mm, default 150 for humans
                     [--windowSize=<int>]                window size for bias correction, default 30.
                     [--brainExtractionMethod=<RPP|SPP>] Registration (Segmentation) based brain extraction
@@ -65,7 +64,6 @@ input_parser() {
     opts_AddOptional  '--class' 'class' 'Class Name' "an optional value; is the name of the class. Default: 3T. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "3T"
     opts_AddOptional  '--domainX' 'domainX' 'Domain X' "an optional value; is the name of the domain X. Default: T1w_MPR. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "T1w_MPR"
     opts_AddOptional  '--domainY' 'domainY' 'Domain Y' "an optional value; is the name of the domain Y. Default: T2w_SPC. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "T2w_SPC"
-    opts_AddOptional '--b0' 'b0' 'magnetic field intensity' "an optional value; the scanner magnetic field intensity. Default: 3T. Supported: 3T | 7T." "3T"
     opts_AddOptional '--windowSize'  'windowSize' 'window size for bias correction' "an optional value; window size for bias correction; for 7T MRI, the optimal value ranges between 20 and 30. Default: 30." "30"
     opts_AddOptional '--brainSize' 'brainSize' 'Brain Size' "an optional value; the average brain size in mm. Default: 150." "150"
     opts_AddOptional '--brainExtractionMethod'  'BrainExtractionMethod' 'Registration (Segmentation) based brain extraction method' "an optional value; The method used to perform brain extraction. Default: RPP. Supported: RPP | SPP." "RPP"
@@ -89,7 +87,6 @@ setup() {
     # The directory holding the data for the subject correspoinding ot this job
     SUBJECTDIR=$studyFolder/raw/$SubjectID
     # Node directory that where computation will take place
-    #NODEDIR=/tmp/work/SLURM_${SubjectID}_${b0}_${BrainExtractionMethod}_${MNIRegistrationMethod}_${SLURM_JOB_ID}
     NODEDIR=/tmp/work/SLURM_${BrainExtractionMethod}_${MNIRegistrationMethod}_${class}_${SubjectID}_${SLURM_JOB_ID}
 
     mkdir -p $NODEDIR
@@ -109,7 +106,7 @@ setup() {
     echo SLURM: job name is $SLURM_JOB_NAME
     echo SLURM: master job identifier of the job array is $SLURM_ARRAY_JOB_ID
     echo SLURM: job array index identifier is $SLURM_ARRAY_TASK_ID
-    echo SLURM: job identifier-sum master job ID and job array index-is $SLURM_JOB_ID
+    echo SLURM: job identifier-sum master job ID and job array index is $SLURM_JOB_ID
     echo ' '
     echo ' '
 
@@ -125,7 +122,6 @@ setup() {
 	echo "class: ${class}"
 	echo "domainX: ${domainX}"
 	echo "domainY: ${domainY}"
-	echo "b0: ${b0}"
 	echo "MNIRegistrationMethod: ${MNIRegistrationMethod}"
     echo "windowSize: ${windowSize}"
 	echo "printcom: ${RUN}"
@@ -177,23 +173,29 @@ main() {
 
     # Detect Number of domain X Images and build list of full paths to them
     numXs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainX}.$" | wc -l`
+    #numXs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainX}$" | wc -l`
     echo "Found ${numXs} ${domainX} Images for subject ${SubjectID}"
     xInputImages=""
     i=1
     while [ $i -le $numXs ] ; do
         # An @ symbol separate the X domain image's full paths
-        xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}${i}/${SubjectID}_${class}_${domainX}${i}.nii.gz@"`
+        #xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}${i}/${SubjectID}_${class}_${domainX}${i}.nii.gz@"`
+        xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}${i}/${SubjectID}_-_${class}_-_${domainX}${i}.nii.gz@"`
+        #xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}/${SubjectID}_-_${class}_-_${domainX}.nii.gz@"`
         i=$(($i+1))
     done
 
     # Detect Number of domain Y Images and build list of full paths to them
     numYs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainY}.$" | wc -l`
+    #numYs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainY}$" | wc -l`
     echo "Found ${numYs} ${domainY} Images for subject ${SubjectID}"
     yInputImages=""
     i=1
     while [ $i -le $numYs ] ; do
         # An @ symbol separate the Y domain image's full paths
-        yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}${i}/${SubjectID}_${class}_${domainY}${i}.nii.gz@"`
+        #yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}${i}/${SubjectID}_${class}_${domainY}${i}.nii.gz@"`
+        yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}${i}/${SubjectID}_-_${class}_-_${domainY}${i}.nii.gz@"`
+        #yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}/${SubjectID}_-_${class}_-_${domainY}.nii.gz@"`
         i=$(($i+1))
     done
 
@@ -206,7 +208,6 @@ main() {
         --class=$class \
         --domainX="$domainX" \
         --domainY="$domainY" \
-        --b0="$b0" \
         --x="$xInputImages" \
         --y="$yInputImages" \
         --xTemplate="$xTemplate" \
@@ -252,7 +253,6 @@ cleanup() {
 
     echo ' '
     echo 'Files transfered to permanent directory, clean temporary directory and log files'
-    #rm -rf /tmp/work/SLURM_${SubjectID}_${b0}_${BrainExtractionMethod}_${MNIRegistrationMethod}_${SLURM_JOB_ID}
     rm -rf /tmp/work/SLURM_${BrainExtractionMethod}_${MNIRegistrationMethod}_${class}_${SubjectID}_${SLURM_JOB_ID}
     rm ${slurm_log_dir}/slurm-${SubjectID}.err
     rm ${slurm_log_dir}/slurm-${SubjectID}.out

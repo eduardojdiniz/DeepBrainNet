@@ -50,7 +50,6 @@ Usage: $log_ToolName
                     [--class=<3T|7T|T1w_MPR|T2w_SPC>]   Name of the class
                     [--domainX=<3T|7T|T1w_MPR|T2w_SPC>] Name of the domain X
                     [--domainY=<3T|7T|T1w_MPR|T2w_SPC>] Name of the domain Y
-                    [--b0=<3T|7T>]                      Magniture of the B0 field
                     [--brainSize=<int>]                 Brain size estimate in mm, default 150 for humans
                     [--windowSize=<int>]                window size for bias correction, default 30.
                     [--brainExtractionMethod=<RPP|SPP>] Registration (Segmentation) based brain extraction
@@ -100,7 +99,6 @@ input_parser() {
     opts_AddOptional  '--class' 'class' 'Class Name' "an optional value; is the name of the class. Default: 3T. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "3T"
     opts_AddOptional  '--domainX' 'domainX' 'Domain X' "an optional value; is the name of the domain X. Default: T1w_MPR. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "T1w_MPR"
     opts_AddOptional  '--domainY' 'domainY' 'Domain Y' "an optional value; is the name of the domain Y. Default: T2w_SPC. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "T2w_SPC"
-    opts_AddOptional  '--b0' 'b0' 'magnetic field intensity' "an optional value; the scanner magnetic field intensity. Default: 3T. Supported: 3T | 7T." "3T"
     opts_AddOptional  '--windowSize'  'windowSize' 'window size for bias correction' "an optional value; window size for bias correction; for 7T MRI, the optimal value ranges between 20 and 30. Default: 30." "30"
     opts_AddOptional '--brainSize' 'brainSize' 'Brain Size' "an optional value; the average brain size in mm. Default: 150." "150"
     opts_AddOptional '--customBrain'  'CustomBrain' 'If custom mask or structural images provided' "an optional value; If you have created a custom brain mask saved as <subject>/<domainX>/custom_brain_mask.nii.gz, specify MASK. If you have created custom structural images, e.g.: '<subject>/<domainX>/<domainX>_bc.nii.gz - '<subject>/<domainX>/<domainX>_bc_brain.nii.gz - '<subject>/<domainY>/<domainY>_bc.nii.gz - '<subject>/<domainY>/<domainY>_bc_brain.nii.gz' to be used when peforming MNI152 Atlas registration, specify CUSTOM. When MASK or CUSTOM is specified, only the AtlasRegistration step is run. If the parameter is omitted or set to NONE (the default), standard image processing will take place. NOTE: This option allows manual correction of brain images in cases when they were not successfully processed and/or masked by the regular use of the pipelines. Before using this option, first ensure that the pipeline arguments used were correct and that templates are a good match to the data. Default: NONE. Supported: NONE | MASK| CUSTOM." "NONE"
@@ -149,7 +147,6 @@ input_parser() {
           --class=$class \
           --domainX=$domainX \
           --domainY=$domainY \
-          --b0=$b0 \
           --windowSize=$windowSize \
           --customBrain="$CustomBrain" \
           --MNIRegistrationMethod=$MNIRegistrationMethod \

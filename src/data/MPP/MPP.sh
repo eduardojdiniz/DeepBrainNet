@@ -140,7 +140,6 @@ Usage: $log_ToolName
                                                       Used with --studyName input to create path to
                                                       directory for all outputs generated as
                                                       ./tmp/studyName/subject
-                    [--b0=<b0>=<3T|7T>]               Magniture of the B0 field
                     [--class=<3T|7T|T1w_MPR|T2w_SPC>]   Name of the class
                     [--domainX=<3T|7T|T1w_MPR|T2w_SPC>] Name of the domain X
                     [--domainY=<3T|7T|T1w_MPR|T2w_SPC>] Name of the domain Y
@@ -196,7 +195,6 @@ input_parser() {
     opts_AddOptional  '--class' 'class' 'Class Name' "an optional value; is the name of the class. Default: 3T. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "3T"
     opts_AddOptional  '--domainX' 'domainX' 'Domain X' "an optional value; is the name of the domain X. Default: T1w_MPR. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "T1w_MPR"
     opts_AddOptional  '--domainY' 'domainY' 'Domain Y' "an optional value; is the name of the domain Y. Default: T2w_SPC. Supported: 3T | 7T | T1w_MPR | T2w_SPC" "T2w_SPC"
-    opts_AddOptional '--b0' 'b0' 'Magnetic Field Strength' "an optinal value; the magnetic field strength. Default: 3T. Supported: 3T|7T." "3T"
     opts_AddMandatory '--x' 'xInputImages' 'Domain X Input Images' "a required value; a string with the paths to the subjects X domain images delimited by the symbol @"
     opts_AddOptional '--y' 'yInputImages' 'Domain Y Input Images' "an optional value; a string with the paths to the subjects Y domain images delimited by the symbol @. Default: NONE" "NONE"
     opts_AddMandatory '--xTemplate' 'xTemplate' 'MNI X Domain Template' "a required value; the MNI X domain image reference template"
@@ -248,9 +246,9 @@ MNIFolder="MNI"
 # ------------------------------------------------------------------------------
 #  Build Paths and Unpack List of Images
 # ------------------------------------------------------------------------------
-xFolder=./${studyName}/preprocessed/${brainExtractionMethod}/${MNIRegistrationMethod}/${subject}/${class}/${xFolder}
-yFolder=./${studyName}/preprocessed/${brainExtractionMethod}/${MNIRegistrationMethod}/${subject}/${class}/${yFolder}
-MNIFolder=./${studyName}/preprocessed/${brainExtractionMethod}/${MNIRegistrationMethod}/${subject}/${class}/${MNIFolder}
+xFolder=./${studyName}/preprocessed/${brainExtractionMethod}/${MNIRegistrationMethod}/${class}/${subject}/${xFolder}
+yFolder=./${studyName}/preprocessed/${brainExtractionMethod}/${MNIRegistrationMethod}/${class}/${subject}/${yFolder}
+MNIFolder=./${studyName}/preprocessed/${brainExtractionMethod}/${MNIRegistrationMethod}/${class}/${subject}/${MNIFolder}
 
 log_Msg "xFolder: $xFolder"
 log_Msg "yFolder: $yFolder"
@@ -431,6 +429,7 @@ if [ "$customBrain" = "NONE" ] ; then
             ${workingDir} \
             ${xFolder}/${xImage}_bc \
             ${xFolder}/${xImage}_bc_brain \
+            ${xFolder}/${xImage}_bc_brain_mask \
             ${yFolder}/${yImage}_bc \
             ${yFolder}/${yImage}_bc_brain \
             ${yFolder}/${yImage}_bc_brain_mask \
@@ -440,7 +439,8 @@ if [ "$customBrain" = "NONE" ] ; then
             ${xFolder}/${yImage}_bc \
             ${xFolder}/${yImage}_bc_brain \
             ${xFolder}/${yImage}_bc_brain_mask \
-            ${xFolder}/xfms/${yImage}_bc_reg
+            ${xFolder}/xfms/${yImage}_bc_reg \
+            ${xFolder}/xfms/${yImage}_bc_invReg
     fi
 
 # ------------------------------------------------------------------------------
@@ -469,6 +469,7 @@ else
 
 fi
 
+echo -e "\n...Atlas Registration"
 # ------------------------------------------------------------------------------
 #  Registration to MNI152
 #  Performs either FLIRT or FLIRT + FNIRT depending on the value of MNIRegistrationMethod

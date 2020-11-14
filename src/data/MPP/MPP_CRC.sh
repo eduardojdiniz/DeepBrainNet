@@ -99,6 +99,7 @@ input_parser() {
     opts_ShowValues
 }
 
+
 setup() {
     SCP=/usr/bin/scp
     SSH=/usr/bin/ssh
@@ -175,6 +176,9 @@ setup() {
     FNIRTConfig="${MPP_Config}/T1_2_MNI152_2mm.cnf"
 }
 
+# Join function with a character delimiter
+join_by() { local IFS="$1"; shift; echo "$*"; }
+
 main() {
     ###############################################################################
 	# Inputs:
@@ -183,33 +187,24 @@ main() {
 	# input names or paths. This batch script assumes the following raw data naming
 	# convention, e.g.
 	#
-	# ${SubjectID}/{b0}/T1w_MPR1/${SubjectID}_{b0}_T1w_MPR1.nii.gz
-	# ${SubjectID}/{b0}/T1w_MPR2/${SubjectID}_{b0}_T1w_MPR2.nii.gz
+	# ${SubjectID}/${class}/${domainX}/${SubjectID}_${class}_${domainY}1.nii.gz
+	# ${SubjectID}/${class}/${domainX}/${SubjectID}_${class}_${domainY}2.nii.gz
     # ...
-	# ${SubjectID}/{b0}/T1w_MPRn/${SubjectID}_{b0}_T1w_MPRn.nii.gz
+	# ${SubjectID}/${class}/${domainX}/${SubjectID}_${class}_${domainY}n.nii.gz
     ###############################################################################
 
-    # Detect Number of T1w Images and build list of full paths to T1w images
-    numT1ws=`ls ${NODEDIR}/${SubjectID}/${b0} | grep 'T1w_MPR.$' | wc -l`
-    echo "Found ${numT1ws} T1w Images for subject ${SubjectID}"
-    T1wInputImages=""
-    i=1
-    while [ $i -le $numT1ws ] ; do
-        # An @ symbol separate the T1-weighted image's full paths
-        T1wInputImages=`echo "${T1wInputImages}${NODEDIR}/${SubjectID}/${b0}/T1w_MPR${i}/${SubjectID}_${b0}_T1w_MPR${i}.nii.gz@"`
-        i=$(($i+1))
-    done
 
-    # Detect Number of T2w Images and build list of full paths to T2w images
-    numT2ws=`ls ${NODEDIR}/${SubjectID}/${b0} | grep 'T2w_SPC.$' | wc -l`
-    echo "Found ${numT2ws} T2w Images for subject ${SubjectID}"
-    T2wInputImages=""
-    i=1
-    while [ $i -le $numT2ws ] ; do
-        # An @ symbol separate the T2-weighted image's full paths
-        T2wInputImages=`echo "${T2wInputImages}${NODEDIR}/${SubjectID}/${b0}/T2w_SPC${i}/${SubjectID}_${b0}_T2w_SPC${i}.nii.gz@"`
-        i=$(($i+1))
-    done
+    # Detect Number of domain X Images and build list of full paths to them
+    Xs=($(find ${NODEDIR}/${SubjectID}/${class} -type f | grep "${domainX}.\/${SubjectID}_-_${class}_-_${domainX}.\.nii\.gz$"))
+    numXs=`echo "${#Xs[@]}"`
+    echo "Found ${numXs} ${domainX} Images for subject ${SubjectID}"
+    xInputImages=`join_by '@' ${Xs[@]}`
+
+    # Detect Number of domain Y Images and build list of full paths to them
+    Ys=($(find ${NODEDIR}/${SubjectID}/${class} -type f | grep "${domainY}.\/${SubjectID}_-_${class}_-_${domainY}.\.nii\.gz$"))
+    numYs=`echo "${#Ys[@]}"`
+    echo "Found ${numYs} ${domainY} Images for subject ${SubjectID}"
+    yInputImages=`join_by '@' ${Ys[@]}`
 
     cd $NODEDIR
 

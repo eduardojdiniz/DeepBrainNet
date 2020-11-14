@@ -317,9 +317,9 @@ if [ "$customBrain" = "NONE" ] ; then
             log_Msg "Processing Modality: $domain"
         fi
 
-        i=1
         for image in $domainInputImages ; do
             # reorient image to match the orientation of MNI152
+            i=`echo $image | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
             ${RUN} ${FSLDIR}/bin/fslreorient2std $image ${domainFolder}/${domainImages}${i}
 
             # ------------------------------------------------------------------------------
@@ -338,32 +338,31 @@ if [ "$customBrain" = "NONE" ] ; then
 
             # always add the message/parameters specified
             outputDomainImagesString="${outputDomainImagesString}${domainFolder}/${domainImages}_bc${i}@"
-            i=$(($i+1))
         done
 
-        # ------------------------------------------------------------------------------
-        # Average Like (Same Modality) Scans
-        # ------------------------------------------------------------------------------
+        # # ------------------------------------------------------------------------------
+        # # Average Like (Same Modality) Scans
+        # # ------------------------------------------------------------------------------
 
-        echo -e "\n...Averaging ${domain} Scans"
-        if [ `echo $domainInputImages | wc -w` -gt 1 ] ; then
-            log_Msg "Averaging ${domain} Images, performing simple averaging"
-            log_Msg "mkdir -p ${domainFolder}/Average${domain}Images"
-            mkdir -p ${domainFolder}/Average${domain}Images
-            ${RUN} ${MPP_Scripts}/AnatomicalAverage.sh \
-                --workingDir=${domainFolder}/Average${domain}Images \
-                --imageList=${outputDomainImagesString} \
-                --ref=${domainTemplate} \
-                --refMask=${TemplateMask} \
-                --brainSize=${brainSize} \
-                --out=${domainFolder}/${domainImages}_bc \
-                --crop=no \
-                --clean=no \
-                --verbose=yes
-        else
-            log_Msg "Only one image found, not averaging ${domainX} images, just copying"
-            ${RUN} ${FSLDIR}/bin/imcp ${domainFolder}/${domainImages}_bc1 ${domainFolder}/${domainImages}_bc
-        fi
+        # echo -e "\n...Averaging ${domain} Scans"
+        # if [ `echo $domainInputImages | wc -w` -gt 1 ] ; then
+        #     log_Msg "Averaging ${domain} Images, performing simple averaging"
+        #     log_Msg "mkdir -p ${domainFolder}/Average${domain}Images"
+        #     mkdir -p ${domainFolder}/Average${domain}Images
+        #     ${RUN} ${MPP_Scripts}/AnatomicalAverage.sh \
+        #         --workingDir=${domainFolder}/Average${domain}Images \
+        #         --imageList=${outputDomainImagesString} \
+        #         --ref=${domainTemplate} \
+        #         --refMask=${TemplateMask} \
+        #         --brainSize=${brainSize} \
+        #         --out=${domainFolder}/${domainImages}_bc \
+        #         --crop=no \
+        #         --clean=no \
+        #         --verbose=yes
+        # else
+        #     log_Msg "Only one image found, not averaging ${domainX} images, just copying"
+        #     ${RUN} ${FSLDIR}/bin/imcp ${domainFolder}/${domainImages}_bc1 ${domainFolder}/${domainImages}_bc
+        # fi
 
         if [ "$brainExtractionMethod" = "RPP" ] ; then
 
@@ -376,14 +375,14 @@ if [ "$customBrain" = "NONE" ] ; then
             mkdir -p ${domainFolder}/BrainExtractionRegistrationBased
             ${RUN} ${MPP_Scripts}/BrainExtractionRegistrationBased.sh \
                 --workingDir=${domainFolder}/BrainExtractionRegistrationBased \
-                --in=${domainFolder}/${domainImages}_bc \
+                --in=${domainFolder}/${domainImages}_bc${i} \
                 --ref=${domainTemplate} \
                 --refMask=${TemplateMask} \
                 --ref2mm=${domainTemplate2mm} \
                 --ref2mmMask=${Template2mmMask} \
-                --outImage=${domainFolder}/${domainImages}_bc \
-                --outBrain=${domainFolder}/${domainImages}_bc_brain \
-                --outBrainMask=${domainFolder}/${domainImages}_bc_brain_mask \
+                --outImage=${domainFolder}/${domainImages}_bc${i} \
+                --outBrain=${domainFolder}/${domainImages}_bc${i}_brain \
+                --outBrainMask=${domainFolder}/${domainImages}_bc${i}_brain_mask \
                 --FNIRTConfig=${FNIRTConfig}
 
         else
@@ -398,50 +397,57 @@ if [ "$customBrain" = "NONE" ] ; then
             ${RUN} ${MPP_Scripts}/BrainExtractionSegmentationBased.sh \
                 --workingDir=${domainFolder}/BrainExtractionSegmentationBased \
                 --segmentationDir=${yFolder}/BiasCorrection \
-                --in=${domainFolder}/${domainImages}_bc \
-                --outImage=${domainFolder}/${domainImages}_bc \
-                --outBrain=${domainFolder}/${domainImages}_bc_brain \
-                --outBrainMask=${domainFolder}/${domainImages}_bc_brain_mask
+                --in=${domainFolder}/${domainImages}_bc${i} \
+                --outImage=${domainFolder}/${domainImages}_bc${i} \
+                --outBrain=${domainFolder}/${domainImages}_bc${i}_brain \
+                --outBrainMask=${domainFolder}/${domainImages}_bc${i}_brain_mask
         fi
 
     done
     # End of looping over domains (X and Y domains)
 
-    # ------------------------------------------------------------------------------
-    # Y to X Registration
-    # ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
+        # Y to X Registration
+        # ------------------------------------------------------------------------------
 
-    echo -e "\n...Performing ${domainY} to ${domainX} Registration"
-    if [ -z "${yInputImages}" ] ; then
-        log_Msg "Skipping ${domainY} to ${domainX} registration --- no ${domainY} image."
+        echo -e "\n...Performing ${domainY} to ${domainX} Registration"
+        if [ -z "${yInputImages}" ] ; then
+            log_Msg "Skipping ${domainY} to ${domainX} registration --- no ${domainY} image."
 
-    else
+        else
 
-        workingDir=${yFolder}/${domainY}To${domainX}Reg
-        if [ -e ${workingDir} ] ; then
-            rm -r ${yFolder}/${domainY}To${domainX}Reg
+            workingDir=${yFolder}/${domainY}To${domainX}Reg
+            if [ -e ${workingDir} ] ; then
+                rm -r ${yFolder}/${domainY}To${domainX}Reg
+            fi
+
+            log_Msg "mdir -p ${workingDir}"
+            mkdir -p ${workingDir}
+
+            for yImg in ${yInputImages} ; do
+                j=`echo $yImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+                for xImg in ${xInputImages} ; do
+                    i=`echo $xImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+
+                    ${RUN} ${MPP_Scripts}/YToXReg.sh \
+                        ${workingDir} \
+                        ${xFolder}/${xImage}_bc${i} \
+                        ${xFolder}/${xImage}_bc${i}_brain \
+                        ${xFolder}/${xImage}_bc${i}_brain_mask \
+                        ${yFolder}/${yImage}_bc${j} \
+                        ${yFolder}/${yImage}_bc${j}_brain \
+                        ${yFolder}/${yImage}_bc${j}_brain_mask \
+                        ${xFolder}/${xImage}_bc${i} \
+                        ${xFolder}/${xImage}_bc${i}_brain \
+                        ${xFolder}/xfms/${xImage}${i} \
+                        ${xFolder}/${yImage}_bc${j}${i} \
+                        ${xFolder}/${yImage}_bc${j}${i}_brain \
+                        ${xFolder}/${yImage}_bc${j}${i}_brain_mask \
+                        ${xFolder}/xfms/${yImage}_bc${j}${i}_reg \
+                        ${xFolder}/xfms/${yImage}_bc${j}${i}_invReg
+                done
+            done
         fi
-
-        log_Msg "mdir -p ${workingDir}"
-        mkdir -p ${workingDir}
-
-        ${RUN} ${MPP_Scripts}/YToXReg.sh \
-            ${workingDir} \
-            ${xFolder}/${xImage}_bc \
-            ${xFolder}/${xImage}_bc_brain \
-            ${xFolder}/${xImage}_bc_brain_mask \
-            ${yFolder}/${yImage}_bc \
-            ${yFolder}/${yImage}_bc_brain \
-            ${yFolder}/${yImage}_bc_brain_mask \
-            ${xFolder}/${xImage}_bc \
-            ${xFolder}/${xImage}_bc_brain \
-            ${xFolder}/xfms/${xImage} \
-            ${xFolder}/${yImage}_bc \
-            ${xFolder}/${yImage}_bc_brain \
-            ${xFolder}/${yImage}_bc_brain_mask \
-            ${xFolder}/xfms/${yImage}_bc_reg \
-            ${xFolder}/xfms/${yImage}_bc_invReg
-    fi
 
 # ------------------------------------------------------------------------------
 # Using custom mask
@@ -450,13 +456,18 @@ if [ "$customBrain" = "NONE" ] ; then
 elif [ "$customBrain" = "MASK" ] ; then
 
     echo -e "\n...Custom Mask provided, skipping all the steps to Atlas registration, applying custom mask."
-    OutputxImage=${xFolder}/${xImage}_bc
-    ${FSLDIR}/bin/fslmaths ${OutputxImage} -mas ${xFolder}/${xImage}_bc_brain_mask ${OutputxImage}_brain
+    for xImg in ${xInputImages} ; do
+        i=`echo $xImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+        OutputxImage=${xFolder}/${xImage}_bc${i}
+        ${FSLDIR}/bin/fslmaths ${OutputxImage} -mas ${xFolder}/${xImage}_bc${i}_brain_mask ${OutputxImage}_brain
+    done
 
     if [ -n "${yInputImages}" ] ; then
-
-        OutputyImage=${xFolder}/${yImage}_bc
-        ${FSLDIR}/bin/fslmaths ${OutputyImage} -mas ${xFolder}/${yImage}_bc_brain_mask ${OutputyImage}_brain
+        for yImg in ${yInputImages} ; do
+            i=`echo $yImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+            OutputyImage=${xFolder}/${yImage}_bc${j}
+            ${FSLDIR}/bin/fslmaths ${OutputyImage} -mas ${xFolder}/${yImage}_bc${j}_brain_mask ${OutputyImage}_brain
+        done
     fi
 
 
@@ -503,41 +514,50 @@ fi
 
 if [ -z "${yInputImages}" ] ; then
 
-    ${RUN} ${MPP_Scripts}/${registrationScript} \
-        --workingDir=${MNIFolder} \
-        --x=${xFolder}/${xImage}_bc \
-        --xBrain=${xFolder}/${xImage}_bc_brain \
-        --xBrainMask=${xFolder}/${xImage}_bc_brain_mask \
-        --ref=${xTemplate} \
-        --refBrain=${xTemplateBrain} \
-        --refMask=${TemplateMask} \
-        --outWarp=${MNIFolder}/xfms/acpc2standard.nii.gz \
-        --outInvWarp=${MNIFolder}/xfms/standard2acpc.nii.gz \
-        --outX=${MNIFolder}/${xImage} \
-        --outXBrain=${MNIFolder}/${xImage}_brain \
-        --outXBrainMask=${MNIFolder}/${xImage}_brain_mask
+    for xImg in ${xInputImages} ; do
+        i=`echo $xImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+        ${RUN} ${MPP_Scripts}/${registrationScript} \
+            --workingDir=${MNIFolder} \
+            --x=${xFolder}/${xImage}_bc${i} \
+            --xBrain=${xFolder}/${xImage}_bc${i}_brain \
+            --xBrainMask=${xFolder}/${xImage}_bc${i}_brain_mask \
+            --ref=${xTemplate} \
+            --refBrain=${xTemplateBrain} \
+            --refMask=${TemplateMask} \
+            --outWarp=${MNIFolder}/xfms/acpc2standard${i}.nii.gz \
+            --outInvWarp=${MNIFolder}/xfms/standard2acpc${i}.nii.gz \
+            --outX=${MNIFolder}/${xImage}${i} \
+            --outXBrain=${MNIFolder}/${xImage}${i}_brain \
+            --outXBrainMask=${MNIFolder}/${xImage}${i}_brain_mask
+    done
 
 else
 
-    ${RUN} ${MPP_Scripts}/${registrationScript} \
-        --workingDir=${MNIFolder} \
-        --x=${xFolder}/${xImage}_bc \
-        --xBrain=${xFolder}/${xImage}_bc_brain \
-        --xBrainMask=${xFolder}/${xImage}_bc_brain_mask \
-        --y=${xFolder}/${yImage}_bc \
-        --yBrain=${xFolder}/${yImage}_bc_brain \
-        --yBrainMask=${xFolder}/${yImage}_bc_brain_mask \
-        --ref=${xTemplate} \
-        --refBrain=${xTemplateBrain} \
-        --refMask=${TemplateMask} \
-        --outWarp=${MNIFolder}/xfms/acpc2standard.nii.gz \
-        --outInvWarp=${MNIFolder}/xfms/standard2acpc.nii.gz \
-        --outX=${MNIFolder}/${xImage} \
-        --outXBrain=${MNIFolder}/${xImage}_brain \
-        --outXBrainMask=${MNIFolder}/${xImage}_brain_mask \
-        --outY=${MNIFolder}/${yImage} \
-        --outYBrain=${MNIFolder}/${yImage}_brain \
-        --outYBrainMask=${MNIFolder}/${yImage}_brain_mask
+    for yImg in ${yInputImages} ; do
+        j=`echo $yImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+        for xImg in ${xInputImages} ; do
+            i=`echo $xImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+            ${RUN} ${MPP_Scripts}/${registrationScript} \
+                --workingDir=${MNIFolder} \
+                --x=${xFolder}/${xImage}_bc${i} \
+                --xBrain=${xFolder}/${xImage}_bc${i}_brain \
+                --xBrainMask=${xFolder}/${xImage}_bc${i}_brain_mask \
+                --y=${xFolder}/${yImage}_bc${j}${i} \
+                --yBrain=${xFolder}/${yImage}_bc${j}${i}_brain \
+                --yBrainMask=${xFolder}/${yImage}_bc${j}${i}_brain_mask \
+                --ref=${xTemplate} \
+                --refBrain=${xTemplateBrain} \
+                --refMask=${TemplateMask} \
+                --outWarp=${MNIFolder}/xfms/acpc2standard${i}.nii.gz \
+                --outInvWarp=${MNIFolder}/xfms/standard2acpc${i}.nii.gz \
+                --outX=${MNIFolder}/${xImage}${i} \
+                --outXBrain=${MNIFolder}/${xImage}${i}_brain \
+                --outXBrainMask=${MNIFolder}/${xImage}${i}_brain_mask \
+                --outY=${MNIFolder}/${yImage}${j}${i} \
+                --outYBrain=${MNIFolder}/${yImage}${j}${i}_brain \
+                --outYBrainMask=${MNIFolder}/${yImage}${j}${i}_brain_mask
+            done
+        done
 fi
 
 # ------------------------------------------------------------------------------

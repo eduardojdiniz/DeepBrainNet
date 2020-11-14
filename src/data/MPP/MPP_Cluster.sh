@@ -156,6 +156,9 @@ setup() {
     FNIRTConfig="${MPP_Config}/T1_2_MNI152_2mm.cnf"
 }
 
+# Join function with a character delimiter
+join_by() { local IFS="$1"; shift; echo "$*"; }
+
 main() {
     ###############################################################################
 	# Inputs:
@@ -172,32 +175,16 @@ main() {
 
 
     # Detect Number of domain X Images and build list of full paths to them
-    numXs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainX}.$" | wc -l`
-    #numXs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainX}$" | wc -l`
+    Xs=($(find ${NODEDIR}/${SubjectID}/${class} -type f | grep "${domainX}.\/${SubjectID}_-_${class}_-_${domainX}.\.nii\.gz$"))
+    numXs=`echo "${#Xs[@]}"`
     echo "Found ${numXs} ${domainX} Images for subject ${SubjectID}"
-    xInputImages=""
-    i=1
-    while [ $i -le $numXs ] ; do
-        # An @ symbol separate the X domain image's full paths
-        #xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}${i}/${SubjectID}_${class}_${domainX}${i}.nii.gz@"`
-        xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}${i}/${SubjectID}_-_${class}_-_${domainX}${i}.nii.gz@"`
-        #xInputImages=`echo "${xInputImages}${NODEDIR}/${SubjectID}/${class}/${domainX}/${SubjectID}_-_${class}_-_${domainX}.nii.gz@"`
-        i=$(($i+1))
-    done
+    xInputImages=`join_by '@' ${Xs[@]}`
 
     # Detect Number of domain Y Images and build list of full paths to them
-    numYs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainY}.$" | wc -l`
-    #numYs=`ls ${NODEDIR}/${SubjectID}/${class} | grep "${domainY}$" | wc -l`
+    Ys=($(find ${NODEDIR}/${SubjectID}/${class} -type f | grep "${domainY}.\/${SubjectID}_-_${class}_-_${domainY}.\.nii\.gz$"))
+    numYs=`echo "${#Ys[@]}"`
     echo "Found ${numYs} ${domainY} Images for subject ${SubjectID}"
-    yInputImages=""
-    i=1
-    while [ $i -le $numYs ] ; do
-        # An @ symbol separate the Y domain image's full paths
-        #yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}${i}/${SubjectID}_${class}_${domainY}${i}.nii.gz@"`
-        yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}${i}/${SubjectID}_-_${class}_-_${domainY}${i}.nii.gz@"`
-        #yInputImages=`echo "${yInputImages}${NODEDIR}/${SubjectID}/${class}/${domainY}/${SubjectID}_-_${class}_-_${domainY}.nii.gz@"`
-        i=$(($i+1))
-    done
+    yInputImages=`join_by '@' ${Ys[@]}`
 
     cd $NODEDIR
 

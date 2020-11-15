@@ -338,70 +338,71 @@ if [ "$customBrain" = "NONE" ] ; then
 
             # always add the message/parameters specified
             outputDomainImagesString="${outputDomainImagesString}${domainFolder}/${domainImages}_bc${i}@"
+
+            # # ------------------------------------------------------------------------------
+            # # Average Like (Same Modality) Scans
+            # # ------------------------------------------------------------------------------
+
+            # echo -e "\n...Averaging ${domain} Scans"
+            # if [ `echo $domainInputImages | wc -w` -gt 1 ] ; then
+            #     log_Msg "Averaging ${domain} Images, performing simple averaging"
+            #     log_Msg "mkdir -p ${domainFolder}/Average${domain}Images"
+            #     mkdir -p ${domainFolder}/Average${domain}Images
+            #     ${RUN} ${MPP_Scripts}/AnatomicalAverage.sh \
+            #         --workingDir=${domainFolder}/Average${domain}Images \
+            #         --imageList=${outputDomainImagesString} \
+            #         --ref=${domainTemplate} \
+            #         --refMask=${TemplateMask} \
+            #         --brainSize=${brainSize} \
+            #         --out=${domainFolder}/${domainImages}_bc \
+            #         --crop=no \
+            #         --clean=no \
+            #         --verbose=yes
+            # else
+            #     log_Msg "Only one image found, not averaging ${domainX} images, just copying"
+            #     ${RUN} ${FSLDIR}/bin/imcp ${domainFolder}/${domainImages}_bc1 ${domainFolder}/${domainImages}_bc
+            # fi
+
+            if [ "$brainExtractionMethod" = "RPP" ] ; then
+
+                # ------------------------------------------------------------------------------
+                # Brain Extraction (FNIRT-based Masking)
+                # ------------------------------------------------------------------------------
+
+                echo -e "\n...Performing Brain Extraction using FNIRT-based Masking"
+                log_Msg "mkdir -p ${domainFolder}/BrainExtractionRegistrationBased"
+                mkdir -p ${domainFolder}/BrainExtractionRegistrationBased
+                ${RUN} ${MPP_Scripts}/BrainExtractionRegistrationBased.sh \
+                    --workingDir=${domainFolder}/BrainExtractionRegistrationBased \
+                    --in=${domainFolder}/${domainImages}_bc${i} \
+                    --ref=${domainTemplate} \
+                    --refMask=${TemplateMask} \
+                    --ref2mm=${domainTemplate2mm} \
+                    --ref2mmMask=${Template2mmMask} \
+                    --outImage=${domainFolder}/${domainImages}_bc${i} \
+                    --outBrain=${domainFolder}/${domainImages}_bc${i}_brain \
+                    --outBrainMask=${domainFolder}/${domainImages}_bc${i}_brain_mask \
+                    --FNIRTConfig=${FNIRTConfig}
+
+            else
+
+                # ------------------------------------------------------------------------------
+                # Brain Extraction (Segmentation-based Masking)
+                # ------------------------------------------------------------------------------
+
+                echo -e "\n...Performing Brain Extraction using Segmentation-based Masking"
+                log_Msg "mkdir -p ${domainFolder}/BrainExtractionSegmentationBased"
+                mkdir -p ${domainFolder}/BrainExtractionSegmentationBased
+                ${RUN} ${MPP_Scripts}/BrainExtractionSegmentationBased.sh \
+                    --workingDir=${domainFolder}/BrainExtractionSegmentationBased \
+                    --segmentationDir=${yFolder}/BiasCorrection \
+                    --in=${domainFolder}/${domainImages}_bc${i} \
+                    --outImage=${domainFolder}/${domainImages}_bc${i} \
+                    --outBrain=${domainFolder}/${domainImages}_bc${i}_brain \
+                    --outBrainMask=${domainFolder}/${domainImages}_bc${i}_brain_mask
+            fi
+
         done
-
-        # # ------------------------------------------------------------------------------
-        # # Average Like (Same Modality) Scans
-        # # ------------------------------------------------------------------------------
-
-        # echo -e "\n...Averaging ${domain} Scans"
-        # if [ `echo $domainInputImages | wc -w` -gt 1 ] ; then
-        #     log_Msg "Averaging ${domain} Images, performing simple averaging"
-        #     log_Msg "mkdir -p ${domainFolder}/Average${domain}Images"
-        #     mkdir -p ${domainFolder}/Average${domain}Images
-        #     ${RUN} ${MPP_Scripts}/AnatomicalAverage.sh \
-        #         --workingDir=${domainFolder}/Average${domain}Images \
-        #         --imageList=${outputDomainImagesString} \
-        #         --ref=${domainTemplate} \
-        #         --refMask=${TemplateMask} \
-        #         --brainSize=${brainSize} \
-        #         --out=${domainFolder}/${domainImages}_bc \
-        #         --crop=no \
-        #         --clean=no \
-        #         --verbose=yes
-        # else
-        #     log_Msg "Only one image found, not averaging ${domainX} images, just copying"
-        #     ${RUN} ${FSLDIR}/bin/imcp ${domainFolder}/${domainImages}_bc1 ${domainFolder}/${domainImages}_bc
-        # fi
-
-        if [ "$brainExtractionMethod" = "RPP" ] ; then
-
-            # ------------------------------------------------------------------------------
-            # Brain Extraction (FNIRT-based Masking)
-            # ------------------------------------------------------------------------------
-
-            echo -e "\n...Performing Brain Extraction using FNIRT-based Masking"
-            log_Msg "mkdir -p ${domainFolder}/BrainExtractionRegistrationBased"
-            mkdir -p ${domainFolder}/BrainExtractionRegistrationBased
-            ${RUN} ${MPP_Scripts}/BrainExtractionRegistrationBased.sh \
-                --workingDir=${domainFolder}/BrainExtractionRegistrationBased \
-                --in=${domainFolder}/${domainImages}_bc${i} \
-                --ref=${domainTemplate} \
-                --refMask=${TemplateMask} \
-                --ref2mm=${domainTemplate2mm} \
-                --ref2mmMask=${Template2mmMask} \
-                --outImage=${domainFolder}/${domainImages}_bc${i} \
-                --outBrain=${domainFolder}/${domainImages}_bc${i}_brain \
-                --outBrainMask=${domainFolder}/${domainImages}_bc${i}_brain_mask \
-                --FNIRTConfig=${FNIRTConfig}
-
-        else
-
-            # ------------------------------------------------------------------------------
-            # Brain Extraction (Segmentation-based Masking)
-            # ------------------------------------------------------------------------------
-
-            echo -e "\n...Performing Brain Extraction using Segmentation-based Masking"
-            log_Msg "mkdir -p ${domainFolder}/BrainExtractionSegmentationBased"
-            mkdir -p ${domainFolder}/BrainExtractionSegmentationBased
-            ${RUN} ${MPP_Scripts}/BrainExtractionSegmentationBased.sh \
-                --workingDir=${domainFolder}/BrainExtractionSegmentationBased \
-                --segmentationDir=${yFolder}/BiasCorrection \
-                --in=${domainFolder}/${domainImages}_bc${i} \
-                --outImage=${domainFolder}/${domainImages}_bc${i} \
-                --outBrain=${domainFolder}/${domainImages}_bc${i}_brain \
-                --outBrainMask=${domainFolder}/${domainImages}_bc${i}_brain_mask
-        fi
 
     done
     # End of looping over domains (X and Y domains)
@@ -464,9 +465,12 @@ elif [ "$customBrain" = "MASK" ] ; then
 
     if [ -n "${yInputImages}" ] ; then
         for yImg in ${yInputImages} ; do
-            i=`echo $yImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
-            OutputyImage=${xFolder}/${yImage}_bc${j}
-            ${FSLDIR}/bin/fslmaths ${OutputyImage} -mas ${xFolder}/${yImage}_bc${j}_brain_mask ${OutputyImage}_brain
+            j=`echo $yImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+            for xImg in ${xInputImages} ; do
+                i=`echo $xImg | grep -Eo '[0-9]+\.nii\.gz$' | grep -Eo '[0-9]+'`
+                OutputyImage=${xFolder}/${yImage}_bc${j}${i}
+                ${FSLDIR}/bin/fslmaths ${OutputyImage} -mas ${xFolder}/${yImage}_bc${j}${i}_brain_mask ${OutputyImage}_brain
+            done
         done
     fi
 

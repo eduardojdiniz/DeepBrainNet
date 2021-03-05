@@ -93,7 +93,9 @@ outputInvYTransform="${15}"
 #${FSLDIR}/bin/convertwarp --relout --rel -r "$outputYImage".nii.gz -w $outputXTransform --postmat="$WD"/YToX.mat --out="$outputYTransform"
 
 # Linear then non-linear registration to MNI
-${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${yImage} -ref ${xImage} -omat ${outputYTransform} -out ${outputYImage}
+#${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${yImage} -ref ${xImage} -omat ${outputYTransform} -out ${outputYImage}
+# Scaling (3), translation (3) and linear scaling = 7
+${FSLDIR}/bin/flirt -interp spline -dof 7 -in ${yImage} -ref ${xImage} -omat ${outputYTransform} -out ${outputYImage}
 ${FSLDIR}/bin/fslmaths "$outputYImage" -abs "$outputYImage" -odt float
 
 # Invert affine transform

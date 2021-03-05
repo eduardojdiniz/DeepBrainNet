@@ -15,7 +15,7 @@
 #source $HOME/.bashrc
 
 module purge # Make sure the modules environment is sane
-module load gcc/5.2.0
+module load gcc/5.4.0
 module load fsl/5.0.11-centos
 module load matlab/R2019b
 

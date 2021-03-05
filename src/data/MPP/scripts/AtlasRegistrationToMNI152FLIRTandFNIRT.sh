@@ -115,7 +115,8 @@ echo " " >> $WD/xfms/log.txt
 # ------------------------------------------------------------------------------
 
 # Linear then non-linear registration to MNI
-${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${xBrain} -ref ${ReferenceBrain} -omat ${WD}/xfms/acpc2MNILinear.mat -out ${WD}/xfms/${xBrainBasename}_to_MNILinear
+${FSLDIR}/bin/flirt -interp spline -dof 7 -in ${xBrain} -ref ${ReferenceBrain} -omat ${WD}/xfms/acpc2MNILinear.mat -out ${WD}/xfms/${xBrainBasename}_to_MNILinear
+#${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${xBrain} -ref ${ReferenceBrain} -omat ${WD}/xfms/acpc2MNILinear.mat -out ${WD}/xfms/${xBrainBasename}_to_MNILinear
 
 ${FSLDIR}/bin/fnirt --in=${x} --ref=${Reference2mm} --aff=${WD}/xfms/acpc2MNILinear.mat --refmask=${Reference2mmMask} --fout=${OutputTransform} --jout=${WD}/xfms/NonlinearRegJacobians.nii.gz --refout=${WD}/xfms/IntensityModulatedXImage.nii.gz --iout=${WD}/xfms/2mmReg.nii.gz --logout=${WD}/xfms/NonlinearReg.txt --intout=${WD}/xfms/NonlinearIntensities.nii.gz --cout=${WD}/xfms/NonlinearReg.nii.gz --config=${FNIRTConfig}
 

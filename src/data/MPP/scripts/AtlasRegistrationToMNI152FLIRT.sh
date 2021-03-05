@@ -125,7 +125,8 @@ echo " " >> $WD/xfms/log.txt
 #fi
 
 # Linear then non-linear registration to MNI
-${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${x} -ref ${Reference} -omat ${OutputTransform} -out ${OutputXImage}
+#${FSLDIR}/bin/flirt -interp spline -dof 12 -in ${x} -ref ${Reference} -omat ${OutputTransform} -out ${OutputXImage}
+${FSLDIR}/bin/flirt -interp spline -dof 7 -in ${x} -ref ${Reference} -omat ${OutputTransform} -out ${OutputXImage}
 ${FSLDIR}/bin/fslmaths "$OutputXImage" -abs "$OutputXImage" -odt float
 
 # Invert affine transform

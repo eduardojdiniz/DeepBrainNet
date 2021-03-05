@@ -1,5 +1,5 @@
 function BrainExtractionSegmentationBased(spm_path, folder, name)
-    sphere_size_for_brain_mask = 4
+    sphere_size_for_brain_mask = 2
     window_size = 30
     addpath(spm_path)
     image = [folder filesep name '.nii']
